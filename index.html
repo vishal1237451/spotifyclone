@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Spotify First Copy - Stream your favorite music with a premium experience" />
+  <title>Spotify First Copy — Login</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="index.css" />
+</head>
+<body>
+
+  <!-- ===================== LOGIN SCREEN ===================== -->
+  <div id="login-screen" class="screen active">
+    <div class="login-bg">
+      <div class="gradient-orb orb-1"></div>
+      <div class="gradient-orb orb-2"></div>
+      <div class="gradient-orb orb-3"></div>
+    </div>
+
+    <div class="login-container" id="login-container">
+      <div class="login-logo">
+        <svg class="logo-icon" viewBox="0 0 48 48" fill="none">
+          <circle cx="24" cy="24" r="24" fill="#1DB954"/>
+          <path d="M34.4 21.8c-5.7-3.4-15.1-3.7-20.5-2-.9.3-1.8-.2-2.1-1.1-.3-.9.2-1.8 1.1-2.1 6.2-1.9 16.5-1.6 23 2.4.8.5 1.1 1.5.6 2.3-.5.7-1.5 1-2.3.5h.2zm-.3 4.7c-.4.6-1.2.9-1.9.4-4.7-2.9-11.9-3.7-17.5-2-.7.2-1.5-.2-1.7-.9-.2-.7.2-1.5.9-1.7 6.3-1.9 14.2-1 19.6 2.3.6.4.9 1.3.5 1.9h.1zm-2.2 4.5c-.3.5-1 .7-1.5.4-4.1-2.5-9.3-3.1-15.4-1.7-.6.1-1.2-.2-1.3-.8-.1-.6.2-1.2.8-1.3 6.7-1.5 12.4-.9 17 2 .5.3.7 1 .4 1.5v-.1z" fill="white"/>
+        </svg>
+        <h1 class="logo-text">Spotify<span class="logo-dot">.</span></h1>
+      </div>
+
+      <p class="login-subtitle">Sign in to start listening</p>
+
+      <form id="login-form" autocomplete="off">
+        <div class="input-group" id="input-group-username">
+          <label for="username">Username</label>
+          <div class="input-wrapper">
+            <svg class="input-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M10 10a4 4 0 100-8 4 4 0 000 8zm-7 8a7 7 0 0114 0H3z"/></svg>
+            <input type="text" id="username" name="username" placeholder="Enter your username" required />
+          </div>
+        </div>
+
+        <div class="input-group" id="input-group-password">
+          <label for="password">Password</label>
+          <div class="input-wrapper">
+            <svg class="input-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/></svg>
+            <input type="password" id="password" name="password" placeholder="Enter your password" required />
+            <button type="button" id="toggle-password" class="password-toggle" aria-label="Toggle password visibility">
+              <svg id="eye-open" class="eye-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M10 3C5 3 1.73 7.11 1 10c.73 2.89 4 7 9 7s8.27-4.11 9-7c-.73-2.89-4-7-9-7zm0 12a5 5 0 110-10 5 5 0 010 10zm0-8a3 3 0 100 6 3 3 0 000-6z"/></svg>
+              <svg id="eye-closed" class="eye-icon hidden" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473C17.571 14.688 19 12.5 19 10c-.73-2.89-4-7-9-7-1.864 0-3.542.6-4.96 1.454L3.707 2.293zM10 5a5 5 0 014.867 6.13l-1.522-1.522A3 3 0 0010.608 7.13L9.086 5.608A5.03 5.03 0 0110 5zM1 10c.73-2.89 4-7 9-7 .862 0 1.69.12 2.474.343L4.252 11.565A8.98 8.98 0 011 10z" clip-rule="evenodd"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div id="error-message" class="error-message"></div>
+
+        <button type="submit" id="login-button" class="login-btn">
+          <span class="btn-text">Sign In</span>
+          <span class="btn-loader hidden">
+            <span class="spinner"></span>
+          </span>
+        </button>
+      </form>
+
+      <div class="login-footer">
+        <p class="hint-text">
+          <svg class="hint-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm0 2.5a1 1 0 110 2 1 1 0 010-2zM9.5 11a.5.5 0 01-.5.5H7a.5.5 0 010-1h.5V8H7a.5.5 0 010-1h1a.5.5 0 01.5.5v3h.5a.5.5 0 01.5.5z"/></svg>
+          Default credentials: <strong>vishal</strong> / <strong>12345</strong>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== MAIN APP SCREEN ===================== -->
+  <div id="app-screen" class="screen">
+    <!-- Hidden audio element for real playback -->
+    <audio id="audio-player" preload="auto"></audio>
+
+    <nav class="top-nav" id="top-nav">
+      <div class="nav-left">
+        <svg class="nav-logo" viewBox="0 0 48 48" fill="none">
+          <circle cx="24" cy="24" r="24" fill="#1DB954"/>
+          <path d="M34.4 21.8c-5.7-3.4-15.1-3.7-20.5-2-.9.3-1.8-.2-2.1-1.1-.3-.9.2-1.8 1.1-2.1 6.2-1.9 16.5-1.6 23 2.4.8.5 1.1 1.5.6 2.3-.5.7-1.5 1-2.3.5h.2zm-.3 4.7c-.4.6-1.2.9-1.9.4-4.7-2.9-11.9-3.7-17.5-2-.7.2-1.5-.2-1.7-.9-.2-.7.2-1.5.9-1.7 6.3-1.9 14.2-1 19.6 2.3.6.4.9 1.3.5 1.9h.1zm-2.2 4.5c-.3.5-1 .7-1.5.4-4.1-2.5-9.3-3.1-15.4-1.7-.6.1-1.2-.2-1.3-.8-.1-.6.2-1.2.8-1.3 6.7-1.5 12.4-.9 17 2 .5.3.7 1 .4 1.5v-.1z" fill="white"/>
+        </svg>
+        <span class="nav-title">Spotify First Copy</span>
+      </div>
+
+      <!-- Search Bar -->
+      <div class="search-container" id="search-container">
+        <div class="search-input-wrapper" id="search-input-wrapper">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+          <input type="text" id="search-input" placeholder="What do you want to listen to?" autocomplete="off" />
+          <button id="search-clear" class="search-clear hidden" aria-label="Clear search">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+          </button>
+        </div>
+        <div class="search-results" id="search-results"></div>
+      </div>
+
+      <div class="nav-right">
+        <div class="user-badge" id="user-badge">
+          <div class="avatar" id="user-avatar">A</div>
+          <span class="user-name" id="user-name">admin</span>
+        </div>
+        <button id="logout-button" class="logout-btn" aria-label="Logout">
+          <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 3a1 1 0 011-1h6a1 1 0 010 2H5v12h5a1 1 0 010 2H4a1 1 0 01-1-1V3zm11.293 3.293a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 01-1.414-1.414L15.586 11H8a1 1 0 010-2h7.586l-1.293-1.293a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+          <span>Logout</span>
+        </button>
+      </div>
+    </nav>
+
+    <main class="main-content" id="main-content">
+      <!-- Hero Section -->
+      <section class="hero-section" id="hero-section">
+        <div class="hero-gradient"></div>
+        <div class="hero-inner">
+          <h2 class="hero-greeting" id="hero-greeting">Good Evening</h2>
+          <p class="hero-sub">Pick up where you left off</p>
+        </div>
+      </section>
+
+      <!-- Quick-Play Grid -->
+      <section class="quick-play-grid" id="quick-play-grid">
+        <div class="quick-card" data-track="0" id="quick-card-1">
+          <div class="quick-img" style="background: linear-gradient(135deg, #e8405e, #9b1d57);">
+            <svg viewBox="0 0 24 24" fill="white"><path d="M12 3v10.55A4 4 0 1014 17V7h4V3h-6z"/></svg>
+          </div>
+          <span>Liked Songs</span>
+        </div>
+        <div class="quick-card" data-track="1" id="quick-card-2">
+          <div class="quick-img" style="background: linear-gradient(135deg, #1e3a5f, #4a90d9);">
+            <svg viewBox="0 0 24 24" fill="white"><path d="M12 3v10.55A4 4 0 1014 17V7h4V3h-6z"/></svg>
+          </div>
+          <span>Chill Vibes</span>
+        </div>
+        <div class="quick-card" data-track="2" id="quick-card-3">
+          <div class="quick-img" style="background: linear-gradient(135deg, #614385, #516395);">
+            <svg viewBox="0 0 24 24" fill="white"><path d="M12 3v10.55A4 4 0 1014 17V7h4V3h-6z"/></svg>
+          </div>
+          <span>Deep Focus</span>
+        </div>
+        <div class="quick-card" data-track="3" id="quick-card-4">
+          <div class="quick-img" style="background: linear-gradient(135deg, #11998e, #38ef7d);">
+            <svg viewBox="0 0 24 24" fill="white"><path d="M12 3v10.55A4 4 0 1014 17V7h4V3h-6z"/></svg>
+          </div>
+          <span>Workout Mix</span>
+        </div>
+        <div class="quick-card" data-track="4" id="quick-card-5">
+          <div class="quick-img" style="background: linear-gradient(135deg, #f7971e, #ffd200);">
+            <svg viewBox="0 0 24 24" fill="white"><path d="M12 3v10.55A4 4 0 1014 17V7h4V3h-6z"/></svg>
+          </div>
+          <span>Today's Top Hits</span>
+        </div>
+        <div class="quick-card" data-track="5" id="quick-card-6">
+          <div class="quick-img" style="background: linear-gradient(135deg, #c31432, #240b36);">
+            <svg viewBox="0 0 24 24" fill="white"><path d="M12 3v10.55A4 4 0 1014 17V7h4V3h-6z"/></svg>
+          </div>
+          <span>RapCaviar</span>
+        </div>
+      </section>
+
+      <!-- Playlist Sections -->
+      <section class="playlist-section" id="playlist-section-1">
+        <h3 class="section-title">Made For You</h3>
+        <div class="card-row" id="card-row-1">
+          <div class="music-card" data-track="0" id="music-card-1">
+            <div class="card-img-wrapper">
+              <div class="card-img" style="background: linear-gradient(135deg, #667eea, #764ba2);"></div>
+              <button class="play-fab" aria-label="Play Daily Mix 1">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+              </button>
+            </div>
+            <p class="card-title">Daily Mix 1</p>
+            <p class="card-desc">Arijit Singh, Shreya Ghoshal, and more</p>
+          </div>
+          <div class="music-card" data-track="1" id="music-card-2">
+            <div class="card-img-wrapper">
+              <div class="card-img" style="background: linear-gradient(135deg, #f093fb, #f5576c);"></div>
+              <button class="play-fab" aria-label="Play Daily Mix 2">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+              </button>
+            </div>
+            <p class="card-title">Daily Mix 2</p>
+            <p class="card-desc">The Weeknd, Dua Lipa, and more</p>
+          </div>
+          <div class="music-card" data-track="2" id="music-card-3">
+            <div class="card-img-wrapper">
+              <div class="card-img" style="background: linear-gradient(135deg, #4facfe, #00f2fe);"></div>
+              <button class="play-fab" aria-label="Play Discover Weekly">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+              </button>
+            </div>
+            <p class="card-title">Discover Weekly</p>
+            <p class="card-desc">Your weekly mixtape of fresh music</p>
+          </div>
+          <div class="music-card" data-track="3" id="music-card-4">
+            <div class="card-img-wrapper">
+              <div class="card-img" style="background: linear-gradient(135deg, #a18cd1, #fbc2eb);"></div>
+              <button class="play-fab" aria-label="Play Release Radar">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+              </button>
+            </div>
+            <p class="card-title">Release Radar</p>
+            <p class="card-desc">Catch all the latest music from artists you follow</p>
+          </div>
+          <div class="music-card" data-track="4" id="music-card-5">
+            <div class="card-img-wrapper">
+              <div class="card-img" style="background: linear-gradient(135deg, #ffecd2, #fcb69f);"></div>
+              <button class="play-fab" aria-label="Play Time Capsule">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+              </button>
+            </div>
+            <p class="card-title">Time Capsule</p>
+            <p class="card-desc">We made you a personalized playlist</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="playlist-section" id="playlist-section-2">
+        <h3 class="section-title">Popular Playlists</h3>
+        <div class="card-row" id="card-row-2">
+          <div class="music-card" data-track="5" id="music-card-6">
+            <div class="card-img-wrapper">
+              <div class="card-img" style="background: linear-gradient(135deg, #0f0c29, #302b63);"></div>
+              <button class="play-fab" aria-label="Play Lo-Fi Beats">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+              </button>
+            </div>
+            <p class="card-title">Lo-Fi Beats</p>
+            <p class="card-desc">Beats to relax/study to</p>
+          </div>
+          <div class="music-card" data-track="0" id="music-card-7">
+            <div class="card-img-wrapper">
+              <div class="card-img" style="background: linear-gradient(135deg, #ee0979, #ff6a00);"></div>
+              <button class="play-fab" aria-label="Play Hot Hits India">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+              </button>
+            </div>
+            <p class="card-title">Hot Hits India</p>
+            <p class="card-desc">The hottest tracks in India right now</p>
+          </div>
+          <div class="music-card" data-track="1" id="music-card-8">
+            <div class="card-img-wrapper">
+              <div class="card-img" style="background: linear-gradient(135deg, #43e97b, #38f9d7);"></div>
+              <button class="play-fab" aria-label="Play Mood Booster">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+              </button>
+            </div>
+            <p class="card-title">Mood Booster</p>
+            <p class="card-desc">Get happy with these feel-good hits!</p>
+          </div>
+          <div class="music-card" data-track="2" id="music-card-9">
+            <div class="card-img-wrapper">
+              <div class="card-img" style="background: linear-gradient(135deg, #fa709a, #fee140);"></div>
+              <button class="play-fab" aria-label="Play All Out 2020s">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+              </button>
+            </div>
+            <p class="card-title">All Out 2020s</p>
+            <p class="card-desc">The biggest songs of the 2020s</p>
+          </div>
+          <div class="music-card" data-track="3" id="music-card-10">
+            <div class="card-img-wrapper">
+              <div class="card-img" style="background: linear-gradient(135deg, #a1c4fd, #c2e9fb);"></div>
+              <button class="play-fab" aria-label="Play Peaceful Piano">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+              </button>
+            </div>
+            <p class="card-title">Peaceful Piano</p>
+            <p class="card-desc">Relax and indulge with beautiful piano pieces</p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Bottom Player Bar -->
+    <footer class="player-bar" id="player-bar">
+      <div class="player-left">
+        <div class="now-playing-img" id="now-playing-img" style="background: linear-gradient(135deg, #667eea, #764ba2);"></div>
+        <div class="now-playing-info">
+          <p class="now-playing-title" id="now-playing-title">Select a song</p>
+          <p class="now-playing-artist" id="now-playing-artist">—</p>
+        </div>
+      </div>
+      <div class="player-center">
+        <div class="player-controls">
+          <button class="ctrl-btn" id="shuffle-btn" aria-label="Shuffle">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/></svg>
+          </button>
+          <button class="ctrl-btn" id="prev-btn" aria-label="Previous">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+          </button>
+          <button class="ctrl-btn play-btn" id="play-pause-btn" aria-label="Play">
+            <svg id="icon-play" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+            <svg id="icon-pause" class="hidden" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+          </button>
+          <button class="ctrl-btn" id="next-btn" aria-label="Next">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+          </button>
+          <button class="ctrl-btn" id="repeat-btn" aria-label="Repeat">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg>
+          </button>
+        </div>
+        <div class="progress-bar-container" id="progress-container">
+          <span class="time" id="current-time">0:00</span>
+          <div class="progress-bar" id="progress-bar">
+            <div class="progress-fill" id="progress-fill"></div>
+            <div class="progress-thumb" id="progress-thumb"></div>
+          </div>
+          <span class="time" id="total-time">3:45</span>
+        </div>
+      </div>
+      <div class="player-right">
+        <button class="ctrl-btn" id="volume-btn" aria-label="Toggle mute">
+          <svg id="vol-icon-high" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+          <svg id="vol-icon-low" class="hidden" viewBox="0 0 24 24" fill="currentColor"><path d="M18.5 12c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM5 9v6h4l5 5V4L9 9H5z"/></svg>
+          <svg id="vol-icon-mute" class="hidden" viewBox="0 0 24 24" fill="currentColor"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>
+        </button>
+        <div class="volume-bar" id="volume-bar">
+          <div class="volume-fill" id="volume-fill" style="width: 70%;"></div>
+          <div class="volume-thumb" id="volume-thumb" style="left: 70%;"></div>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
