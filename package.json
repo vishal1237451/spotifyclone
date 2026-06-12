@@ -1,4 +1,7 @@
 {
+  "scripts": {
+    "start": "node start.mjs"
+  },
   "dependencies": {
     "i": "^0.3.7"
   }
