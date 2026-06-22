@@ -26,6 +26,9 @@
   let isSeeking = false;
   let homeTracks = [];     // tracks loaded on home
   let searchTrackCache = []; // tracks from search
+  let isLoggingInWarp = false;
+  let startSpaceAnimation = () => {};
+  let stopSpaceAnimation = () => {};
 
   // ——— DOM refs ———
   const $ = (s) => document.querySelector(s);
@@ -139,6 +142,7 @@
     passwordInput.value = '';
     hideError();
     usernameInput.focus();
+    startSpaceAnimation();
   }
 
   function showApp(username) {
@@ -150,6 +154,8 @@
     setGreeting();
     sessionStorage.setItem('spotify_session', JSON.stringify({ authenticated: true, username, timestamp: Date.now() }));
     loadHomeTracks();
+    stopSpaceAnimation();
+    isLoggingInWarp = false;
   }
 
   function authenticate(u, p) {
@@ -175,6 +181,7 @@
     loginBtn.disabled = true;
     btnText.classList.add('hidden');
     btnLoader.classList.remove('hidden');
+    isLoggingInWarp = true;
     await sleep(800);
     if (authenticate(username, password)) {
       loginBtn.style.background = '#1ed760';
@@ -182,6 +189,7 @@
       showApp(username);
       loginBtn.style.background = '';
     } else {
+      isLoggingInWarp = false;
       showError('Invalid username or password. Please try again.');
     }
     loginBtn.disabled = false;
@@ -722,7 +730,163 @@
     });
   }
 
+  // ——————————————————————————————————————————————
+  //  INTERACTIVE SPACE BACKGROUND (STARFIELD CANVAS)
+  // ——————————————————————————————————————————————
+
+  function initSpaceBackground() {
+    const canvas = document.getElementById('space-canvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+
+    let stars = [];
+    const numStars = 150;
+    let width = canvas.width = window.innerWidth;
+    let height = canvas.height = window.innerHeight;
+
+    let mouse = { x: width / 2, y: height / 2, targetX: width / 2, targetY: height / 2 };
+    let warpActive = false;
+    let currentSpeed = 0.5;
+    let spaceAnimId = null;
+
+    window.addEventListener('resize', () => {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+      initStars();
+    });
+
+    document.addEventListener('mousemove', (e) => {
+      mouse.targetX = e.clientX;
+      mouse.targetY = e.clientY;
+    });
+
+    const loginButton = document.getElementById('login-button');
+    if (loginButton) {
+      loginButton.addEventListener('mouseenter', () => warpActive = true);
+      loginButton.addEventListener('mouseleave', () => warpActive = false);
+    }
+
+    class Star {
+      constructor() {
+        this.reset(true);
+      }
+
+      reset(init = false) {
+        this.x = (Math.random() - 0.5) * width * 2;
+        this.y = (Math.random() - 0.5) * height * 2;
+        this.z = init ? Math.random() * 1000 : 1000;
+        this.px = 0;
+        this.py = 0;
+        this.color = this.getRandomColor();
+        this.twinkleSpeed = 0.01 + Math.random() * 0.03;
+        this.twinklePhase = Math.random() * Math.PI * 2;
+        this.size = 0.5 + Math.random() * 1.5;
+      }
+
+      getRandomColor() {
+        const colors = [
+          'rgba(255, 255, 255, ',
+          'rgba(167, 139, 250, ',
+          'rgba(14, 165, 233, ',
+          'rgba(236, 72, 153, ',
+          'rgba(0, 242, 254, '
+        ];
+        return colors[Math.floor(Math.random() * colors.length)];
+      }
+
+      update() {
+        let targetSpeed;
+        if (warpActive || isLoggingInWarp) {
+          targetSpeed = 25.0;
+        } else if (isPlaying) {
+          targetSpeed = 1.8; // speed up stars when music plays!
+        } else {
+          targetSpeed = 0.6; // slow cruise speed
+        }
+        currentSpeed += (targetSpeed - currentSpeed) * 0.08;
+        this.z -= currentSpeed;
+        if (this.z <= 0) {
+          this.reset(false);
+        }
+        this.twinklePhase += this.twinkleSpeed;
+      }
+
+      draw() {
+        if (this.z <= 0) return;
+        const k = 400 / this.z;
+        const parallaxX = (mouse.x - width / 2) * (1 - this.z / 1000) * 0.15;
+        const parallaxY = (mouse.y - height / 2) * (1 - this.z / 1000) * 0.15;
+
+        const sx = this.x * k + width / 2 + parallaxX;
+        const sy = this.y * k + height / 2 + parallaxY;
+
+        if (sx < 0 || sx > width || sy < 0 || sy > height) {
+          this.reset(false);
+          return;
+        }
+
+        const baseAlpha = (1 - this.z / 1000);
+        const twinkle = (Math.sin(this.twinklePhase) + 1) / 2;
+        const alpha = baseAlpha * (0.3 + 0.7 * twinkle);
+
+        if (currentSpeed > 2.0 && this.px !== 0) {
+          ctx.strokeStyle = this.color + alpha * 0.8 + ')';
+          ctx.lineWidth = this.size * k * 0.4;
+          ctx.beginPath();
+          ctx.moveTo(this.px, this.py);
+          ctx.lineTo(sx, sy);
+          ctx.stroke();
+        } else {
+          ctx.fillStyle = this.color + alpha + ')';
+          const r = this.size * k;
+          ctx.beginPath();
+          ctx.arc(sx, sy, r, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        this.px = sx;
+        this.py = sy;
+      }
+    }
+
+    function initStars() {
+      stars = [];
+      for (let i = 0; i < numStars; i++) {
+        stars.push(new Star());
+      }
+    }
+
+    function animate() {
+      ctx.clearRect(0, 0, width, height);
+
+      mouse.x += (mouse.targetX - mouse.x) * 0.05;
+      mouse.y += (mouse.targetY - mouse.y) * 0.05;
+
+      for (let star of stars) {
+        star.update();
+        star.draw();
+      }
+
+      spaceAnimId = requestAnimationFrame(animate);
+    }
+
+    startSpaceAnimation = () => {
+      if (!spaceAnimId) {
+        warpActive = false;
+        currentSpeed = 0.5;
+        animate();
+      }
+    };
+
+    stopSpaceAnimation = () => {
+      // Keep running globally behind both login and app screens!
+    };
+
+    initStars();
+  }
+
   // ——— Init ———
+  initSpaceBackground();
   initMouseGlow();
   initClickStars();
   checkSession();
