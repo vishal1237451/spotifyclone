@@ -323,6 +323,107 @@
         </div>
       </div>
     </footer>
+
+    <!-- Fullscreen Player Overlay -->
+    <div id="fullscreen-player" class="fs-overlay">
+      <div id="fs-bg-blur" class="fs-bg-blur"></div>
+      <div class="fs-gradient-overlay"></div>
+      
+      <div class="fs-content">
+        <!-- Header -->
+        <header class="fs-header">
+          <button id="fs-close-btn" class="fs-icon-btn" aria-label="Collapse">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
+          </button>
+          <div class="fs-header-info">
+            <span class="fs-subtitle">PLAYING FROM</span>
+            <span class="fs-playlist-name" id="fs-playlist-name">Queue</span>
+          </div>
+          <button class="fs-icon-btn" aria-label="More options">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+          </button>
+        </header>
+
+        <!-- Main Body (Artwork and Metadata, optional side-by-side lyrics) -->
+        <div class="fs-body">
+          <div class="fs-main-panel">
+            <div class="fs-cover-wrapper">
+              <div id="fs-cover" class="fs-cover" style="background: linear-gradient(135deg, #667eea, #764ba2);"></div>
+            </div>
+            <div class="fs-info-container">
+              <div class="fs-metadata">
+                <h2 id="fs-title" class="fs-title">Select a song</h2>
+                <p id="fs-artist" class="fs-artist">—</p>
+              </div>
+              <button id="fs-like-btn" class="fs-icon-btn fs-like-btn" aria-label="Like song">
+                <svg id="fs-like-icon-empty" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78v0z"/></svg>
+                <svg id="fs-like-icon-filled" class="hidden" viewBox="0 0 24 24" fill="#00f2fe"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="fs-lyrics-panel" id="fs-lyrics-panel">
+            <div class="fs-lyrics-header">Lyrics</div>
+            <div class="fs-lyrics-content" id="fs-lyrics-content">
+              <p class="fs-lyrics-placeholder">Tap clean energy vibes and listen close. Lyrics will appear when sync is complete...</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer / Controls -->
+        <footer class="fs-footer">
+          <!-- Seekbar -->
+          <div class="fs-progress-container" id="fs-progress-container">
+            <span class="fs-time" id="fs-current-time">0:00</span>
+            <div class="fs-progress-bar" id="fs-progress-bar">
+              <div class="fs-progress-fill" id="fs-progress-fill"></div>
+              <div class="fs-progress-thumb" id="fs-progress-thumb"></div>
+            </div>
+            <span class="fs-time" id="fs-total-time">0:00</span>
+          </div>
+
+          <!-- Control buttons -->
+          <div class="fs-controls-container">
+            <div class="fs-left-actions">
+              <button class="fs-ctrl-btn" id="fs-lyrics-toggle-btn" aria-label="Toggle Lyrics">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 14H11v-2h2v2zm0-4H11V7h2v5z"/></svg>
+              </button>
+            </div>
+
+            <div class="fs-center-controls">
+              <button class="fs-ctrl-btn" id="fs-shuffle-btn" aria-label="Shuffle">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/></svg>
+              </button>
+              <button class="fs-ctrl-btn fs-prev-next" id="fs-prev-btn" aria-label="Previous">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+              </button>
+              <button class="fs-ctrl-btn fs-play-btn" id="fs-play-pause-btn" aria-label="Play">
+                <svg id="fs-icon-play" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                <svg id="fs-icon-pause" class="hidden" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+              </button>
+              <button class="fs-ctrl-btn fs-prev-next" id="fs-next-btn" aria-label="Next">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+              </button>
+              <button class="fs-ctrl-btn" id="fs-repeat-btn" aria-label="Repeat">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg>
+              </button>
+            </div>
+
+            <div class="fs-right-actions">
+              <button class="fs-ctrl-btn" id="fs-volume-btn" aria-label="Mute">
+                <svg id="fs-vol-icon-high" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+                <svg id="fs-vol-icon-low" class="hidden" viewBox="0 0 24 24" fill="currentColor"><path d="M18.5 12c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM5 9v6h4l5 5V4L9 9H5z"/></svg>
+                <svg id="fs-vol-icon-mute" class="hidden" viewBox="0 0 24 24" fill="currentColor"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>
+              </button>
+              <div class="fs-volume-bar" id="fs-volume-bar">
+                <div class="fs-volume-fill" id="fs-volume-fill" style="width: 70%;"></div>
+                <div class="fs-volume-thumb" id="fs-volume-thumb" style="left: 70%;"></div>
+              </div>
+            </div>
+          </div>
+        </footer>
+      </div>
+    </div>
   </div>
 
   <script src="app.js"></script>

@@ -921,6 +921,16 @@ input { font-family: inherit; }
   align-items: center;
   gap: 14px;
   min-width: 0;
+  cursor: pointer;
+  padding: 6px 12px 6px 6px;
+  border-radius: var(--radius-md);
+  transition: background-color var(--transition-fast);
+}
+.player-left:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+.player-left:hover .now-playing-title {
+  color: var(--green);
 }
 .now-playing-img {
   width: 56px; height: 56px;
@@ -1148,5 +1158,660 @@ input { font-family: inherit; }
   100% {
     opacity: 0;
     transform: translate(calc(var(--dx) + var(--tx)), calc(var(--dy) + var(--ty))) scale(0) rotate(var(--rot));
+  }
+}
+
+/* ========================================================
+   FULLSCREEN PLAYER OVERLAY
+   ======================================================== */
+.fs-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 900;
+  display: flex;
+  flex-direction: column;
+  background: radial-gradient(circle at 50% 50%, #15092a 0%, #070312 60%, #020108 100%);
+  transform: translateY(100%);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.5s cubic-bezier(0.3, 1, 0.3, 1), opacity 0.5s ease;
+  overflow: hidden;
+}
+.fs-overlay.active {
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.fs-bg-blur {
+  position: absolute;
+  inset: -40px;
+  background-size: cover;
+  background-position: center;
+  filter: blur(120px) brightness(0.28) saturate(1.8);
+  opacity: 0.85;
+  z-index: 1;
+  transition: background-image 0.8s ease;
+}
+
+.fs-gradient-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, rgba(10, 8, 22, 0.3) 0%, rgba(10, 8, 22, 0.6) 45%, rgba(6, 2, 16, 0.92) 100%);
+  z-index: 2;
+}
+
+.fs-content {
+  position: relative;
+  z-index: 3;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 40px 48px;
+  box-sizing: border-box;
+}
+
+/* Header */
+.fs-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 60px;
+}
+
+.fs-icon-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-med);
+}
+.fs-icon-btn svg {
+  width: 22px;
+  height: 22px;
+  transition: transform var(--transition-med);
+}
+.fs-icon-btn:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.12);
+  transform: scale(1.06);
+  box-shadow: 0 4px 15px rgba(255, 255, 255, 0.05);
+}
+.fs-icon-btn:active {
+  transform: scale(0.94);
+}
+
+.fs-header-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+.fs-subtitle {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: rgba(167, 139, 250, 0.7);
+  text-transform: uppercase;
+}
+.fs-playlist-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-top: 2px;
+}
+
+/* Body Layout */
+.fs-body {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 80px;
+  min-height: 0;
+  padding: 40px 0;
+  position: relative;
+}
+
+.fs-main-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  width: 100%;
+  max-width: 420px;
+}
+
+.fs-cover-wrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.7), 0 0 50px rgba(124, 58, 237, 0.25);
+  transition: transform 0.5s cubic-bezier(0.3, 1, 0.3, 1);
+}
+.fs-cover-wrapper:hover {
+  transform: translateY(-8px) scale(1.02);
+}
+
+.fs-cover {
+  width: 100%;
+  height: 100%;
+  border-radius: var(--radius-lg);
+  background-size: cover;
+  background-position: center;
+  transition: background-image 0.5s ease;
+}
+
+/* Cover art rotation pulse (music-driven visual effect) */
+.fs-overlay.is-playing .fs-cover-wrapper {
+  animation: coverPulse 3s ease-in-out infinite alternate;
+}
+@keyframes coverPulse {
+  0% { box-shadow: 0 30px 80px rgba(0,0,0,.7), 0 0 45px rgba(0, 242, 254, 0.2); }
+  100% { box-shadow: 0 30px 85px rgba(0,0,0,.85), 0 0 70px rgba(124, 58, 237, 0.45); }
+}
+
+.fs-info-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0 4px;
+}
+
+.fs-metadata {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+}
+.fs-title {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: -0.5px;
+}
+.fs-artist {
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 6px 0 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fs-like-btn {
+  color: rgba(255,255,255,0.5);
+  flex-shrink: 0;
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  background: transparent;
+  border: none;
+}
+.fs-like-btn:hover {
+  color: #ff4d4d;
+  background: rgba(255, 255, 255, 0.05);
+  transform: scale(1.1);
+}
+.fs-like-btn.liked {
+  color: #ff4d4d;
+}
+
+/* Lyrics Panel */
+.fs-lyrics-panel {
+  flex: 1.2;
+  height: 100%;
+  max-height: 460px;
+  max-width: 580px;
+  background: rgba(10, 8, 22, 0.45);
+  backdrop-filter: blur(40px) saturate(1.8);
+  -webkit-backdrop-filter: blur(40px) saturate(1.8);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-lg);
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  opacity: 0;
+  transform: translateX(40px);
+  pointer-events: none;
+  transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.3, 1, 0.3, 1);
+  display: none;
+}
+.fs-lyrics-panel.active {
+  display: flex;
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: auto;
+}
+
+.fs-lyrics-header {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 20px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 12px;
+}
+
+.fs-lyrics-content {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 10px;
+}
+.fs-lyrics-placeholder {
+  font-size: 1.4rem;
+  line-height: 1.6;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.4);
+  text-align: left;
+  margin: 0;
+}
+.fs-lyric-line {
+  font-size: 1.35rem;
+  line-height: 1.6;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.45);
+  margin-bottom: 18px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  transform-origin: left center;
+}
+.fs-lyric-line:hover {
+  color: var(--text-primary);
+}
+.fs-lyric-line.active {
+  color: #00f2fe;
+  transform: scale(1.04);
+  text-shadow: 0 0 15px rgba(0, 242, 254, 0.5);
+}
+
+/* Footer / Controls */
+.fs-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.fs-progress-container {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+}
+
+.fs-time {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.6);
+  min-width: 44px;
+  font-variant-numeric: tabular-nums;
+}
+
+.fs-progress-bar {
+  flex: 1;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 3px;
+  position: relative;
+  cursor: pointer;
+  transition: height var(--transition-fast);
+}
+.fs-progress-bar:hover {
+  height: 8px;
+}
+
+.fs-progress-fill {
+  height: 100%;
+  background: var(--text-primary);
+  border-radius: 3px;
+  width: 0%;
+  transition: background var(--transition-fast);
+}
+.fs-progress-bar:hover .fs-progress-fill {
+  background: var(--green);
+}
+
+.fs-progress-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--text-primary);
+  position: absolute;
+  top: 50%;
+  left: 0%;
+  transform: translate(-50%, -50%) scale(0);
+  transition: transform var(--transition-fast);
+}
+.fs-progress-bar:hover .fs-progress-thumb {
+  transform: translate(-50%, -50%) scale(1);
+}
+
+/* Controls Grid */
+.fs-controls-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  height: 80px;
+}
+
+.fs-left-actions, .fs-right-actions {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+.fs-left-actions {
+  justify-content: flex-start;
+}
+.fs-right-actions {
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.fs-center-controls {
+  flex: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+}
+
+.fs-ctrl-btn {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  padding: 8px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-med);
+}
+.fs-ctrl-btn svg {
+  width: 22px;
+  height: 22px;
+  transition: transform var(--transition-med);
+}
+.fs-ctrl-btn:hover {
+  color: var(--text-primary);
+  transform: scale(1.15);
+}
+.fs-ctrl-btn:active {
+  transform: scale(0.9);
+}
+.fs-ctrl-btn.active {
+  color: var(--green);
+}
+.fs-ctrl-btn.active::after {
+  content: '';
+  display: block;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--green);
+  margin: 2px auto 0;
+  position: absolute;
+  bottom: -4px;
+}
+
+.fs-prev-next svg {
+  width: 28px;
+  height: 28px;
+}
+
+.fs-play-btn {
+  width: 68px;
+  height: 68px;
+  background: var(--text-primary);
+  color: #000;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
+  transform: scale(1);
+}
+.fs-play-btn svg {
+  width: 32px;
+  height: 32px;
+}
+.fs-play-btn:hover {
+  transform: scale(1.08);
+  background: #ffffff;
+  box-shadow: 0 12px 30px rgba(255, 255, 255, 0.25), 0 0 20px rgba(0, 242, 254, 0.15);
+}
+.fs-play-btn:active {
+  transform: scale(0.93);
+}
+
+.fs-volume-bar {
+  width: 100px;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 3px;
+  position: relative;
+  cursor: pointer;
+}
+.fs-volume-fill {
+  height: 100%;
+  background: var(--text-primary);
+  border-radius: 3px;
+  transition: background var(--transition-fast);
+}
+.fs-volume-bar:hover .fs-volume-fill {
+  background: var(--green);
+}
+.fs-volume-thumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--text-primary);
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  transition: transform var(--transition-fast);
+}
+.fs-volume-bar:hover .fs-volume-thumb {
+  transform: translate(-50%, -50%) scale(1);
+}
+
+/* ========================================================
+   RESPONSIVE STYLING FOR FULLSCREEN OVERLAY
+   ======================================================== */
+@media (max-width: 992px) {
+  .fs-body {
+    gap: 40px;
+  }
+  .fs-lyrics-panel {
+    max-width: 420px;
+  }
+}
+
+@media (max-width: 768px) {
+  .fs-content {
+    padding: 24px;
+  }
+  .fs-body {
+    flex-direction: column;
+    gap: 0;
+    padding: 20px 0;
+    align-items: stretch;
+  }
+  .fs-main-panel {
+    max-width: 100%;
+    margin: auto 0;
+  }
+  .fs-cover-wrapper {
+    max-width: 320px;
+    margin: 0 auto;
+  }
+  
+  /* On mobile, if lyrics are active, they slide in as a full overlay card */
+  .fs-lyrics-panel {
+    position: absolute;
+    inset: 0;
+    max-width: 100%;
+    max-height: 100%;
+    background: rgba(10, 8, 22, 0.95);
+    z-index: 10;
+    transform: translateY(100%);
+    opacity: 0;
+    display: none;
+    transition: transform 0.4s cubic-bezier(0.3, 1, 0.3, 1), opacity 0.4s ease;
+  }
+  .fs-lyrics-panel.active {
+    display: flex;
+    transform: translateY(0);
+    opacity: 1;
+  }
+  
+  .fs-controls-container {
+    grid-template-columns: 1fr 3fr 1fr; /* hide volume bar text, focus center */
+  }
+  .fs-right-actions .fs-volume-bar {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .fs-cover-wrapper {
+    max-width: 260px;
+  }
+  .fs-title {
+    font-size: 1.4rem;
+  }
+  .fs-artist {
+    font-size: 0.85rem;
+  }
+  .fs-center-controls {
+    gap: 16px;
+  }
+  .fs-play-btn {
+    width: 60px;
+    height: 60px;
+  }
+}
+
+/* ========================================================
+   FULLSCREEN SPACE LYRICS MODE AND PAGE TRANSITIONS
+   ======================================================== */
+.top-nav, .main-content {
+  transition: opacity 0.5s cubic-bezier(0.3, 1, 0.3, 1), visibility 0.5s ease;
+}
+
+#app-screen.fullscreen-active .top-nav,
+#app-screen.fullscreen-active .main-content {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+}
+
+/* Lyrics Mode Styles */
+.fs-overlay.lyrics-mode .fs-main-panel {
+  display: none !important;
+}
+
+.fs-overlay.lyrics-mode .fs-body {
+  justify-content: center;
+  align-items: center;
+  padding: 20px 0;
+}
+
+.fs-overlay.lyrics-mode .fs-lyrics-panel {
+  display: flex !important;
+  opacity: 1 !important;
+  transform: none !important;
+  max-width: 900px;
+  width: 100%;
+  height: 100%;
+  max-height: 80vh;
+  background: transparent !important;
+  border: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  padding: 0;
+  box-shadow: none !important;
+  pointer-events: auto;
+}
+
+.fs-overlay.lyrics-mode .fs-lyrics-header {
+  display: none !important;
+}
+
+.fs-overlay.lyrics-mode .fs-lyrics-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding-top: 35vh; /* space before first line so it can center */
+  padding-bottom: 40vh; /* space after last line */
+  scroll-behavior: smooth;
+  text-align: center;
+  overflow-y: scroll;
+}
+
+/* Hide scrollbar in lyrics mode for clean visualizer experience */
+.fs-overlay.lyrics-mode .fs-lyrics-content::-webkit-scrollbar {
+  display: none;
+}
+
+.fs-overlay.lyrics-mode .fs-lyric-line {
+  font-size: 2.2rem;
+  line-height: 1.5;
+  font-weight: 800;
+  margin-bottom: 24px;
+  text-align: center;
+  max-width: 100%;
+  padding: 0 32px;
+  color: rgba(255, 255, 255, 0.3);
+  transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+  transform: scale(0.92);
+}
+
+.fs-overlay.lyrics-mode .fs-lyric-line:hover {
+  color: rgba(255, 255, 255, 0.7);
+  transform: scale(0.96);
+}
+
+.fs-overlay.lyrics-mode .fs-lyric-line.active {
+  color: var(--green) !important;
+  transform: scale(1.08) !important;
+  text-shadow: 0 0 25px rgba(0, 242, 254, 0.7), 0 0 10px rgba(0, 242, 254, 0.4);
+}
+
+.fs-overlay.lyrics-mode .fs-bg-blur {
+  opacity: 0.12; /* dim blurred cover art so stars are very visible */
+}
+
+/* Mobile responsive fixes for lyrics mode */
+@media (max-width: 768px) {
+  .fs-overlay.lyrics-mode .fs-lyrics-panel {
+    max-height: 100%;
+    margin-bottom: 20px;
+  }
+  .fs-overlay.lyrics-mode .fs-lyric-line {
+    font-size: 1.6rem;
+    margin-bottom: 18px;
+    padding: 0 16px;
+  }
+  .fs-overlay.lyrics-mode .fs-lyrics-content {
+    padding-top: 30vh;
+    padding-bottom: 35vh;
   }
 }

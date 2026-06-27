@@ -81,6 +81,41 @@
   const searchClear   = $('#search-clear');
   const searchResults = $('#search-results');
 
+  // Fullscreen Overlay DOM Refs
+  const fsOverlay         = $('#fullscreen-player');
+  const fsCloseBtn        = $('#fs-close-btn');
+  const fsCover           = $('#fs-cover');
+  const fsTitle           = $('#fs-title');
+  const fsArtist          = $('#fs-artist');
+  const fsPlaylistName    = $('#fs-playlist-name');
+  const fsPlayPauseBtn    = $('#fs-play-pause-btn');
+  const fsIconPlay        = $('#fs-icon-play');
+  const fsIconPause       = $('#fs-icon-pause');
+  const fsProgressFill    = $('#fs-progress-fill');
+  const fsProgressThumb   = $('#fs-progress-thumb');
+  const fsProgressBar     = $('#fs-progress-bar');
+  const fsCurrentTimeEl   = $('#fs-current-time');
+  const fsTotalTimeEl     = $('#fs-total-time');
+  const fsShuffleBtn      = $('#fs-shuffle-btn');
+  const fsRepeatBtn       = $('#fs-repeat-btn');
+  const fsPrevBtn         = $('#fs-prev-btn');
+  const fsNextBtn         = $('#fs-next-btn');
+  const fsVolumeBtn       = $('#fs-volume-btn');
+  const fsVolIconHigh     = $('#fs-vol-icon-high');
+  const fsVolIconLow      = $('#fs-vol-icon-low');
+  const fsVolIconMute     = $('#fs-vol-icon-mute');
+  const fsVolumeBar       = $('#fs-volume-bar');
+  const fsVolumeFill      = $('#fs-volume-fill');
+  const fsVolumeThumb     = $('#fs-volume-thumb');
+  const fsLyricsToggleBtn = $('#fs-lyrics-toggle-btn');
+  const fsLyricsPanel     = $('#fs-lyrics-panel');
+  const fsLyricsContent   = $('#fs-lyrics-content');
+  const fsLikeBtn         = $('#fs-like-btn');
+  const fsLikeIconEmpty   = $('#fs-like-icon-empty');
+  const fsLikeIconFilled  = $('#fs-like-icon-filled');
+  const fsBgBlur          = $('#fs-bg-blur');
+  const playerLeft        = $('.player-left');
+
   // ——————————————————————————————————————————————
   //  JIOSAAVN API HELPERS
   // ——————————————————————————————————————————————
@@ -296,12 +331,30 @@
     const p = Math.min(Math.max(pct, 0), 1) * 100;
     progressFill.style.width = `${p}%`;
     progressThumb.style.left = `${p}%`;
+    fsProgressFill.style.width = `${p}%`;
+    fsProgressThumb.style.left = `${p}%`;
   }
 
   function playFromList(list, index) {
     currentPlaylist = list;
     currentPlaylistIndex = index;
     playTrack(list[index]);
+  }
+
+  function syncPlayPauseState() {
+    if (isPlaying) {
+      iconPlay.classList.add('hidden');
+      iconPause.classList.remove('hidden');
+      fsIconPlay.classList.add('hidden');
+      fsIconPause.classList.remove('hidden');
+      fsOverlay.classList.add('is-playing');
+    } else {
+      iconPlay.classList.remove('hidden');
+      iconPause.classList.add('hidden');
+      fsIconPlay.classList.remove('hidden');
+      fsIconPause.classList.add('hidden');
+      fsOverlay.classList.remove('is-playing');
+    }
   }
 
   function playTrack(track) {
@@ -320,25 +373,25 @@
     audio.volume = volume;
     audio.play().catch(() => pausePlayback());
     isPlaying = true;
-    iconPlay.classList.add('hidden');
-    iconPause.classList.remove('hidden');
+    syncPlayPauseState();
     closeSearch();
     document.title = `${track.title} — Spotify Clone`;
+    
+    // Update fullscreen
+    updateFullscreenUI();
   }
 
   function startPlayback() {
     if (!currentTrack) return;
     audio.play().catch(() => {});
     isPlaying = true;
-    iconPlay.classList.add('hidden');
-    iconPause.classList.remove('hidden');
+    syncPlayPauseState();
   }
 
   function pausePlayback() {
     audio.pause();
     isPlaying = false;
-    iconPlay.classList.remove('hidden');
-    iconPause.classList.add('hidden');
+    syncPlayPauseState();
   }
 
   function stopPlayback() {
@@ -352,26 +405,40 @@
     nowPlayingArtist.textContent = '—';
     currentTimeEl.textContent = '0:00';
     totalTimeEl.textContent = '0:00';
-    iconPlay.classList.remove('hidden');
-    iconPause.classList.add('hidden');
+    fsCurrentTimeEl.textContent = '0:00';
+    fsTotalTimeEl.textContent = '0:00';
+    syncPlayPauseState();
     document.title = 'Spotify First Copy';
+    
+    // Reset Fullscreen cover
+    fsCover.style.background = 'linear-gradient(135deg, #667eea, #764ba2)';
+    fsBgBlur.style.backgroundImage = '';
   }
 
   audio.addEventListener('timeupdate', () => {
     if (isSeeking || isNaN(audio.duration)) return;
-    currentTimeEl.textContent = formatTime(audio.currentTime);
+    const fmt = formatTime(audio.currentTime);
+    currentTimeEl.textContent = fmt;
+    fsCurrentTimeEl.textContent = fmt;
     updateProgress(audio.currentTime / audio.duration);
+    
+    // Synchronize active lyric highlight
+    updateActiveLyricLine();
   });
 
   audio.addEventListener('loadedmetadata', () => {
-    totalTimeEl.textContent = formatTime(audio.duration);
+    const fmt = formatTime(audio.duration);
+    totalTimeEl.textContent = fmt;
+    fsTotalTimeEl.textContent = fmt;
   });
 
   audio.addEventListener('ended', () => {
-    if (repeatBtn.classList.contains('active')) { audio.currentTime = 0; audio.play(); return; }
+    const isRepeat = repeatBtn.classList.contains('active') || fsRepeatBtn.classList.contains('active');
+    if (isRepeat) { audio.currentTime = 0; audio.play(); return; }
     if (currentPlaylist.length === 0) return;
     let nextIdx;
-    if (shuffleBtn.classList.contains('active')) {
+    const isShuffle = shuffleBtn.classList.contains('active') || fsShuffleBtn.classList.contains('active');
+    if (isShuffle) {
       do { nextIdx = Math.floor(Math.random() * currentPlaylist.length); }
       while (nextIdx === currentPlaylistIndex && currentPlaylist.length > 1);
     } else {
@@ -395,7 +462,8 @@
   nextBtn.addEventListener('click', () => {
     if (!currentTrack || currentPlaylist.length === 0) return;
     let idx;
-    if (shuffleBtn.classList.contains('active')) {
+    const isShuffle = shuffleBtn.classList.contains('active') || fsShuffleBtn.classList.contains('active');
+    if (isShuffle) {
       do { idx = Math.floor(Math.random() * currentPlaylist.length); }
       while (idx === currentPlaylistIndex && currentPlaylist.length > 1);
     } else {
@@ -404,8 +472,18 @@
     playFromList(currentPlaylist, idx);
   });
 
-  shuffleBtn.addEventListener('click', () => shuffleBtn.classList.toggle('active'));
-  repeatBtn.addEventListener('click', () => repeatBtn.classList.toggle('active'));
+  // Dual state toggle functions for sync
+  function toggleShuffle() {
+    shuffleBtn.classList.toggle('active');
+    fsShuffleBtn.classList.toggle('active', shuffleBtn.classList.contains('active'));
+  }
+  function toggleRepeat() {
+    repeatBtn.classList.toggle('active');
+    fsRepeatBtn.classList.toggle('active', repeatBtn.classList.contains('active'));
+  }
+
+  shuffleBtn.addEventListener('click', toggleShuffle);
+  repeatBtn.addEventListener('click', toggleRepeat);
 
   // Progress seek
   progressBar.addEventListener('mousedown', (e) => {
@@ -432,20 +510,32 @@
   // ——————————————————————————————————————————————
 
   function updateVolumeIcon() {
-    volIconHigh.classList.add('hidden');
-    volIconLow.classList.add('hidden');
-    volIconMute.classList.add('hidden');
-    if (isMuted || volume === 0) volIconMute.classList.remove('hidden');
-    else if (volume < 0.5) volIconLow.classList.remove('hidden');
-    else volIconHigh.classList.remove('hidden');
+    const icons = [volIconHigh, volIconLow, volIconMute, fsVolIconHigh, fsVolIconLow, fsVolIconMute];
+    icons.forEach(i => i.classList.add('hidden'));
+    
+    if (isMuted || volume === 0) {
+      volIconMute.classList.remove('hidden');
+      fsVolIconMute.classList.remove('hidden');
+    } else if (volume < 0.5) {
+      volIconLow.classList.remove('hidden');
+      fsVolIconLow.classList.remove('hidden');
+    } else {
+      volIconHigh.classList.remove('hidden');
+      fsVolIconHigh.classList.remove('hidden');
+    }
   }
 
   function setVolume(val) {
     volume = Math.min(Math.max(val, 0), 1);
     audio.volume = volume;
     isMuted = volume === 0;
+    
     volumeFill.style.width = `${volume * 100}%`;
     volumeThumb.style.left = `${volume * 100}%`;
+    
+    fsVolumeFill.style.width = `${volume * 100}%`;
+    fsVolumeThumb.style.left = `${volume * 100}%`;
+    
     updateVolumeIcon();
   }
 
@@ -473,6 +563,27 @@
 
   audio.volume = volume;
   updateVolumeIcon();
+
+  // Fullscreen player volume events
+  fsVolumeBar.addEventListener('mousedown', (e) => {
+    setVolumeFromEventFs(e);
+    const onMove = (ev) => setVolumeFromEventFs(ev);
+    const onUp = () => { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); };
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  });
+  fsVolumeBar.addEventListener('click', (e) => setVolumeFromEventFs(e));
+
+  function setVolumeFromEventFs(e) {
+    const rect = fsVolumeBar.getBoundingClientRect();
+    const pct = Math.min(Math.max((e.clientX - rect.left) / rect.width, 0), 1);
+    savedVolume = pct > 0 ? pct : savedVolume;
+    setVolume(pct);
+  }
+
+  fsVolumeBtn.addEventListener('click', () => {
+    volumeBtn.click();
+  });
 
   // ——————————————————————————————————————————————
   //  SEARCH (Live JioSaavn Search)
@@ -883,6 +994,263 @@
     };
 
     initStars();
+  }
+
+  // ——————————————————————————————————————————————
+  //  FULLSCREEN PLAYER OVERLAY ACTIONS & STATE
+  // ——————————————————————————————————————————————
+
+  const MOCK_LYRICS = {
+    'gehra hua': [
+      { time: 0, text: "🎵 (Gehra Hua - Instrumental Intro) 🎵" },
+      { time: 8, text: "Gehra hua yeh silsila..." },
+      { time: 14, text: "Kyun dil mera yun kho gaya..." },
+      { time: 20, text: "Teri baaton mein, teri raahon mein" },
+      { time: 27, text: "Dhundhe tujhe hi nigaahon mein..." },
+      { time: 34, text: "Gehra hua yeh silsila..." },
+      { time: 40, text: "Jaane kyun chalne lagaa..." },
+      { time: 46, text: "Ek naya daur zindagi ka..." },
+      { time: 53, text: "Har lamha lagta haseen sa..." },
+      { time: 60, text: "🎵 (Chorus Instrumental) 🎵" },
+      { time: 70, text: "Tu jo mila toh har khushi mili..." },
+      { time: 77, text: "Jaise khizan mein ek kali khili..." },
+      { time: 84, text: "Ab na juda hona kabhi..." },
+      { time: 91, text: "Tu hi hai meri aashiqui..." },
+      { time: 98, text: "Gehra hua yeh silsila..." },
+      { time: 105, text: "Kyun dil mera yun kho gaya..." },
+      { time: 112, text: "Teri baaton mein, teri raahon mein" },
+      { time: 120, text: "🎵 [Instrumental Outro] 🎵" }
+    ],
+    default: [
+      { time: 0, text: "🎵 [Instruments playing] 🎵" },
+      { time: 5, text: "Welcome to this premium audio vibe..." },
+      { time: 10, text: "Close your eyes, let the rhythm wash over you." },
+      { time: 16, text: "Under the stars, we dance through the code." },
+      { time: 24, text: "Every pixel aligns, every frequency glows." },
+      { time: 32, text: "Feel the bass in your chest, the neon in your eyes." },
+      { time: 42, text: "We are moving together, no boundaries, no lies." },
+      { time: 52, text: "🎵 [Vocal improvisations] 🎵" },
+      { time: 64, text: "Can you hear the echo of a thousand dreams?" },
+      { time: 76, text: "Life is more than just variables and streams." },
+      { time: 88, text: "Hold onto the melody, let it carry you high." },
+      { time: 99, text: "Underneath the auroral neon cosmic sky." },
+      { time: 110, text: "🎵 [Sweet instrumental solo] 🎵" },
+      { time: 125, text: "When the morning comes, this vibe remains." },
+      { time: 138, text: "Flowing through our blood, escaping all the chains." },
+      { time: 150, text: "Thanks for listening to Spotify First Copy." },
+      { time: 165, text: "Stay tuned for more endless tracks..." },
+      { time: 180, text: "🎵 [Fade Out] 🎵" }
+    ]
+  };
+
+  let currentSongLyrics = [];
+
+  function getLikedSongs() {
+    try { return JSON.parse(localStorage.getItem('spotify_liked_songs')) || []; }
+    catch { return []; }
+  }
+
+  function toggleLikeTrack(track) {
+    if (!track) return;
+    let liked = getLikedSongs();
+    const isLiked = liked.some(t => t.id === track.id);
+    if (isLiked) {
+      liked = liked.filter(t => t.id !== track.id);
+    } else {
+      liked.push(track);
+    }
+    localStorage.setItem('spotify_liked_songs', JSON.stringify(liked));
+    syncLikeState();
+  }
+
+  function syncLikeState() {
+    if (!currentTrack) return;
+    const liked = getLikedSongs();
+    const isLiked = liked.some(t => t.id === currentTrack.id);
+    fsLikeBtn.classList.toggle('liked', isLiked);
+    if (isLiked) {
+      fsLikeIconEmpty.classList.add('hidden');
+      fsLikeIconFilled.classList.remove('hidden');
+    } else {
+      fsLikeIconEmpty.classList.remove('hidden');
+      fsLikeIconFilled.classList.add('hidden');
+    }
+  }
+
+  function loadLyricsForCurrentSong() {
+    fsLyricsContent.innerHTML = '';
+    const title = (currentTrack?.title || '').toLowerCase();
+    let lyrics = MOCK_LYRICS.default;
+    
+    if (title.includes('gehra') || title.includes('hua')) {
+      lyrics = MOCK_LYRICS['gehra hua'];
+    }
+    
+    currentSongLyrics = lyrics;
+    
+    lyrics.forEach((line, idx) => {
+      const p = document.createElement('p');
+      p.className = 'fs-lyric-line';
+      p.textContent = line.text;
+      p.dataset.time = line.time;
+      p.addEventListener('click', () => {
+        audio.currentTime = line.time;
+        if (!isPlaying) startPlayback();
+      });
+      fsLyricsContent.appendChild(p);
+    });
+  }
+
+  function updateActiveLyricLine() {
+    if (!fsOverlay.classList.contains('active') || !fsLyricsPanel.classList.contains('active')) return;
+    const time = audio.currentTime;
+    const lines = fsLyricsContent.querySelectorAll('.fs-lyric-line');
+    let activeIdx = -1;
+    
+    for (let i = 0; i < currentSongLyrics.length; i++) {
+      if (time >= currentSongLyrics[i].time) {
+        activeIdx = i;
+      } else {
+        break;
+      }
+    }
+    
+    lines.forEach((line, idx) => {
+      if (idx === activeIdx) {
+        if (!line.classList.contains('active')) {
+          line.classList.add('active');
+          
+          // Scroll the line to the center of the lyrics container
+          const containerHeight = fsLyricsContent.clientHeight;
+          const lineOffset = line.offsetTop;
+          const linePercentHeight = line.clientHeight / 2;
+          fsLyricsContent.scrollTo({
+            top: lineOffset - containerHeight / 2 + linePercentHeight,
+            behavior: 'smooth'
+          });
+        }
+      } else {
+        line.classList.remove('active');
+      }
+    });
+  }
+
+  function syncShuffleRepeatState() {
+    const isShuffle = shuffleBtn.classList.contains('active');
+    const isRepeat = repeatBtn.classList.contains('active');
+    fsShuffleBtn.classList.toggle('active', isShuffle);
+    fsRepeatBtn.classList.toggle('active', isRepeat);
+  }
+
+  function syncVolumeState() {
+    fsVolumeFill.style.width = `${volume * 100}%`;
+    fsVolumeThumb.style.left = `${volume * 100}%`;
+  }
+
+  function updateFullscreenUI() {
+    if (!currentTrack) return;
+    fsTitle.textContent = currentTrack.title;
+    fsArtist.textContent = currentTrack.artist;
+    if (currentTrack.image) {
+      fsCover.style.backgroundImage = `url('${currentTrack.image}')`;
+      fsBgBlur.style.backgroundImage = `url('${currentTrack.image}')`;
+    } else {
+      fsCover.style.background = 'linear-gradient(135deg, #667eea, #764ba2)';
+      fsBgBlur.style.backgroundImage = '';
+    }
+    
+    let playlistName = 'Queue';
+    if (currentPlaylist === homeTracks) {
+      playlistName = 'Made For You';
+    } else if (currentPlaylist === searchTrackCache) {
+      playlistName = 'Search Results';
+    }
+    fsPlaylistName.textContent = playlistName;
+
+    syncPlayPauseState();
+    syncShuffleRepeatState();
+    syncVolumeState();
+    syncLikeState();
+    
+    // Sync lyrics mode states
+    const isLyricsActive = fsOverlay.classList.contains('lyrics-mode');
+    fsLyricsPanel.classList.toggle('active', isLyricsActive);
+    fsLyricsToggleBtn.classList.toggle('active', isLyricsActive);
+  }
+
+  function openFullscreenPlayer() {
+    if (!currentTrack) return;
+    fsOverlay.classList.add('active');
+    appScreen.classList.add('fullscreen-active');
+    updateFullscreenUI();
+    loadLyricsForCurrentSong();
+  }
+
+  function closeFullscreenPlayer() {
+    fsOverlay.classList.remove('active');
+    appScreen.classList.remove('fullscreen-active');
+  }
+
+  // Event handlers for opening/closing
+  playerLeft.addEventListener('click', () => {
+    if (currentTrack) openFullscreenPlayer();
+  });
+  
+  fsCloseBtn.addEventListener('click', closeFullscreenPlayer);
+
+  // Synced Control hooks for fullscreen controls
+  fsPlayPauseBtn.addEventListener('click', () => {
+    playPauseBtn.click();
+  });
+
+  fsPrevBtn.addEventListener('click', () => {
+    prevBtn.click();
+  });
+
+  fsNextBtn.addEventListener('click', () => {
+    nextBtn.click();
+  });
+
+  fsShuffleBtn.addEventListener('click', () => {
+    toggleShuffle();
+  });
+
+  fsRepeatBtn.addEventListener('click', () => {
+    toggleRepeat();
+  });
+
+  fsLikeBtn.addEventListener('click', () => {
+    toggleLikeTrack(currentTrack);
+  });
+
+  fsLyricsToggleBtn.addEventListener('click', () => {
+    const isLyricsActive = fsOverlay.classList.toggle('lyrics-mode');
+    fsLyricsPanel.classList.toggle('active', isLyricsActive);
+    fsLyricsToggleBtn.classList.toggle('active', isLyricsActive);
+    if (isLyricsActive) {
+      setTimeout(() => updateActiveLyricLine(), 100);
+    }
+  });
+
+  // Seeking in fullscreen progress bar
+  fsProgressBar.addEventListener('mousedown', (e) => {
+    isSeeking = true;
+    seekFromEventFs(e);
+    const onMove = (ev) => seekFromEventFs(ev);
+    const onUp = () => { isSeeking = false; document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); };
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  });
+  fsProgressBar.addEventListener('click', (e) => seekFromEventFs(e));
+
+  function seekFromEventFs(e) {
+    if (!currentTrack || isNaN(audio.duration)) return;
+    const rect = fsProgressBar.getBoundingClientRect();
+    const pct = Math.min(Math.max((e.clientX - rect.left) / rect.width, 0), 1);
+    audio.currentTime = pct * audio.duration;
+    updateProgress(pct);
+    fsCurrentTimeEl.textContent = formatTime(audio.currentTime);
+    currentTimeEl.textContent = formatTime(audio.currentTime);
   }
 
   // ——— Init ———
