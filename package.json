@@ -1,7 +1,8 @@
 {
   "scripts": {
-    "start": "node start.mjs",
-    "dev": "npx http-server . -a 127.0.0.1 -p 8080 -c-1"
+    "start": "npm run --prefix jiosaavn-api start",
+    "dev": "npx http-server . -a 127.0.0.1 -p 8080 -c-1",
+    "backend": "npm run --prefix jiosaavn-api dev"
   },
   "dependencies": {
     "i": "^0.3.7"
