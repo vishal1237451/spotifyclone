@@ -6,7 +6,7 @@
 
   // ——— Config ———
   const API_BASE = 'http://localhost:3000/api';
-  const AUDIO_QUALITY = '160kbps'; // 12, 48, 96, 160, 320
+  const AUDIO_QUALITY = '320kbps'; // 12, 48, 96, 160, 320
 
   const VALID_USERS = [
     { username: 'vishal', password: '12345' },
