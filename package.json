@@ -1,6 +1,7 @@
 {
   "scripts": {
-    "start": "node start.mjs"
+    "start": "node start.mjs",
+    "dev": "npx http-server . -a 127.0.0.1 -p 8080 -c-1"
   },
   "dependencies": {
     "i": "^0.3.7"
