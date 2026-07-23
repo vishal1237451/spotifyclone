@@ -1,8 +1,8 @@
 {
   "scripts": {
-    "start": "npm run --prefix jiosaavn-api start",
-    "dev": "npx http-server . -a 127.0.0.1 -p 8080 -c-1",
-    "backend": "npm run --prefix jiosaavn-api dev"
+    "start": "npm run --prefix backend start",
+    "dev": "npx http-server frontend -a 127.0.0.1 -p 8080 -c-1",
+    "backend": "npm run --prefix backend dev"
   },
   "dependencies": {
     "i": "^0.3.7"

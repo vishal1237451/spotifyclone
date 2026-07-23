@@ -78,13 +78,12 @@ git clone https://github.com/vishal1237451/spotifyclone.git
 cd spotifyclone
 ```
 
-### 2. Set up the JioSaavn API (required for song search & playback)
+### 2. Set up the Backend API (required for song search & playback)
 
 ```bash
-cd jiosaavn-api
+cd backend
 npm install --legacy-peer-deps
-npx tsc && npx tsc-alias
-node start.mjs
+npm run dev
 ```
 
 The API server will start at `http://localhost:3000`.
@@ -94,7 +93,8 @@ The API server will start at `http://localhost:3000`.
 Open a **new terminal** and run:
 
 ```bash
-npx -y http-server . -p 8080 -c-1
+npm run dev
+# or: npx -y http-server frontend -p 8080 -c-1
 ```
 
 ### 4. Open in browser
@@ -112,15 +112,16 @@ Navigate to **http://localhost:8080** and login with:
 
 ```
 spotifyclone/
-├── index.html          # Main HTML structure
-├── index.css           # Complete design system & animations
-├── app.js              # Application logic, player, search, auth
-├── README.md           # This file
-└── jiosaavn-api/       # Self-hosted JioSaavn API
-    ├── start.mjs       # Node.js server entry point
-    ├── src/            # API source code (TypeScript)
-    ├── dist/           # Compiled JS output
-    └── package.json    # API dependencies
+├── frontend/           # Client-side web application
+│   ├── index.html      # Main HTML structure
+│   ├── index.css       # Complete design system & animations
+│   └── app.js          # Application logic, player, search, auth
+├── backend/            # Self-hosted JioSaavn API service
+│   ├── src/            # API source code (TypeScript)
+│   ├── dist/           # Compiled JS output
+│   └── package.json    # API dependencies
+├── package.json        # Root scripts to run frontend & backend
+└── README.md           # Documentation
 ```
 
 ---
