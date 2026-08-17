@@ -52,6 +52,7 @@
   const heroGreeting  = $('#hero-greeting');
 
   const audio = $('#audio-player');
+  audio.crossOrigin = 'anonymous';
 
   const nowPlayingTitle  = $('#now-playing-title');
   const nowPlayingArtist = $('#now-playing-artist');
@@ -77,9 +78,21 @@
   const volumeFill  = $('#volume-fill');
   const volumeThumb = $('#volume-thumb');
 
-  const searchInput   = $('#search-input');
-  const searchClear   = $('#search-clear');
-  const searchResults = $('#search-results');
+  const searchInput    = $('#search-input');
+  const searchClear    = $('#search-clear');
+  const searchResults  = $('#search-results');
+  const voiceSearchBtn = $('#voice-search-btn');
+
+  // Equalizer DOM Refs
+  const eqBtn          = $('#eq-btn');
+  const fsEqBtn        = $('#fs-eq-btn');
+  const eqModal        = $('#eq-modal');
+  const eqBackdrop     = $('#eq-backdrop');
+  const eqCloseBtn     = $('#eq-close-btn');
+  const eqToggleSwitch = $('#eq-toggle-switch');
+  const eqPresetSelect = $('#eq-preset-select');
+  const eqResetBtn     = $('#eq-reset-btn');
+  const eqCanvas       = $('#eq-canvas');
 
   // Fullscreen Overlay DOM Refs
   const fsOverlay         = $('#fullscreen-player');
@@ -735,6 +748,284 @@
     if (e.key === 'Escape') { closeSearch(); searchInput.blur(); }
     if (e.key === 'Enter') { const f = searchResults.querySelector('.search-result-item'); if (f) f.click(); }
   });
+
+  // ——————————————————————————————————————————————
+  //  VOICE SEARCH (Web Speech API)
+  // ——————————————————————————————————————————————
+
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  let voiceRecognition = null;
+  let isVoiceListening = false;
+
+  if (SpeechRecognition) {
+    voiceRecognition = new SpeechRecognition();
+    voiceRecognition.continuous = false;
+    voiceRecognition.interimResults = false;
+    voiceRecognition.lang = 'en-US';
+
+    voiceRecognition.onstart = () => {
+      isVoiceListening = true;
+      voiceSearchBtn.classList.add('listening');
+      voiceSearchBtn.title = 'Listening... Speak now!';
+    };
+
+    voiceRecognition.onresult = (event) => {
+      const transcript = event.results[0]?.[0]?.transcript;
+      if (transcript) {
+        searchInput.value = transcript;
+        searchClear.classList.remove('hidden');
+        triggerVoiceSearch(transcript);
+      }
+    };
+
+    voiceRecognition.onerror = (event) => {
+      console.warn('Voice search error:', event.error);
+      stopVoiceListening();
+    };
+
+    voiceRecognition.onend = () => {
+      stopVoiceListening();
+    };
+  } else {
+    if (voiceSearchBtn) voiceSearchBtn.title = 'Voice search is not supported in this browser';
+  }
+
+  function stopVoiceListening() {
+    isVoiceListening = false;
+    if (voiceSearchBtn) {
+      voiceSearchBtn.classList.remove('listening');
+      voiceSearchBtn.title = 'Search with voice';
+    }
+  }
+
+  function triggerVoiceSearch(q) {
+    clearTimeout(searchDebounce);
+    searchResults.innerHTML = '<div class="search-results-header" style="text-align:center;padding:20px;">Searching...</div>';
+    searchResults.classList.add('visible');
+    apiSearchSongs(q, 15).then(results => {
+      const tracks = results.map(normalizeTrack);
+      renderSearchResults(tracks, q);
+    });
+  }
+
+  if (voiceSearchBtn) {
+    voiceSearchBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (!voiceRecognition) {
+        alert('Voice search is not supported in this browser. Please use Chrome, Edge, or Safari.');
+        return;
+      }
+      if (isVoiceListening) {
+        voiceRecognition.stop();
+      } else {
+        try {
+          voiceRecognition.start();
+        } catch (err) {
+          console.error('Speech recognition start failed:', err);
+        }
+      }
+    });
+  }
+
+  // ——————————————————————————————————————————————
+  //  AUDIO EQUALIZER & WEB AUDIO API
+  // ——————————————————————————————————————————————
+
+  let audioCtx = null;
+  let mediaSourceNode = null;
+  let analyserNode = null;
+  let eqFilters = [];
+  let isEqInitialized = false;
+  let isEqEnabled = true;
+
+  const EQ_PRESETS = {
+    flat:        [0, 0, 0, 0, 0],
+    bassBoost:   [6, 4, 1, 0, -1],
+    trebleBoost: [-1, 0, 1, 4, 6],
+    pop:         [-1, 2, 4, 2, -1],
+    rock:        [4, 2, -1, 2, 4],
+    jazz:        [3, 2, 1, 2, 3],
+    vocal:       [-2, 1, 4, 3, 0],
+    edm:         [5, 3, -1, 2, 4],
+    custom:      null
+  };
+
+  const FREQUENCIES = [60, 230, 910, 3600, 14000];
+  const BAND_TYPES = ['lowshelf', 'peaking', 'peaking', 'peaking', 'highshelf'];
+
+  function initAudioContext() {
+    if (isEqInitialized) {
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      return;
+    }
+
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      audioCtx = new AudioCtx();
+
+      mediaSourceNode = audioCtx.createMediaElementSource(audio);
+      analyserNode = audioCtx.createAnalyser();
+      analyserNode.fftSize = 64;
+
+      let lastNode = mediaSourceNode;
+      eqFilters = FREQUENCIES.map((freq, i) => {
+        const filter = audioCtx.createBiquadFilter();
+        filter.type = BAND_TYPES[i];
+        filter.frequency.value = freq;
+        filter.gain.value = 0;
+        lastNode.connect(filter);
+        lastNode = filter;
+        return filter;
+      });
+
+      lastNode.connect(analyserNode);
+      analyserNode.connect(audioCtx.destination);
+
+      isEqInitialized = true;
+      startVisualizer();
+    } catch (err) {
+      console.warn('Web Audio API init notice:', err);
+    }
+  }
+
+  function applyEqGains(gains) {
+    if (!gains) return;
+    gains.forEach((g, i) => {
+      const slider = document.getElementById(`eq-band-${i}`);
+      const valLabel = document.getElementById(`eq-val-${i}`);
+      if (slider) slider.value = g;
+      if (valLabel) valLabel.textContent = `${g > 0 ? '+' : ''}${g} dB`;
+
+      if (isEqInitialized && eqFilters[i]) {
+        const targetGain = isEqEnabled ? g : 0;
+        eqFilters[i].gain.setTargetAtTime(targetGain, audioCtx.currentTime, 0.01);
+      }
+    });
+  }
+
+  // Initialize slider listeners
+  FREQUENCIES.forEach((_, i) => {
+    const slider = document.getElementById(`eq-band-${i}`);
+    if (slider) {
+      slider.addEventListener('input', (e) => {
+        initAudioContext();
+        const val = parseFloat(e.target.value);
+        const valLabel = document.getElementById(`eq-val-${i}`);
+        if (valLabel) valLabel.textContent = `${val > 0 ? '+' : ''}${val} dB`;
+
+        if (isEqInitialized && eqFilters[i]) {
+          const targetGain = isEqEnabled ? val : 0;
+          eqFilters[i].gain.setTargetAtTime(targetGain, audioCtx.currentTime, 0.01);
+        }
+
+        if (eqPresetSelect) eqPresetSelect.value = 'custom';
+      });
+    }
+  });
+
+  // Preset Select Listener
+  if (eqPresetSelect) {
+    eqPresetSelect.addEventListener('change', (e) => {
+      initAudioContext();
+      const presetKey = e.target.value;
+      if (presetKey !== 'custom' && EQ_PRESETS[presetKey]) {
+        applyEqGains(EQ_PRESETS[presetKey]);
+      }
+    });
+  }
+
+  // Toggle Switch Listener
+  if (eqToggleSwitch) {
+    eqToggleSwitch.addEventListener('change', (e) => {
+      initAudioContext();
+      isEqEnabled = e.target.checked;
+      const currentGains = getSelectedEqGains();
+      applyEqGains(currentGains);
+    });
+  }
+
+  // Reset Button Listener
+  if (eqResetBtn) {
+    eqResetBtn.addEventListener('click', () => {
+      initAudioContext();
+      if (eqPresetSelect) eqPresetSelect.value = 'flat';
+      applyEqGains(EQ_PRESETS.flat);
+    });
+  }
+
+  function getSelectedEqGains() {
+    const gains = [];
+    for (let i = 0; i < 5; i++) {
+      const slider = document.getElementById(`eq-band-${i}`);
+      gains.push(slider ? parseFloat(slider.value) : 0);
+    }
+    return gains;
+  }
+
+  // Modal Open/Close handlers
+  function openEqModal() {
+    initAudioContext();
+    if (eqModal) eqModal.classList.remove('hidden');
+    if (eqBtn) eqBtn.classList.add('active');
+    if (fsEqBtn) fsEqBtn.classList.add('active');
+  }
+
+  function closeEqModal() {
+    if (eqModal) eqModal.classList.add('hidden');
+    if (eqBtn) eqBtn.classList.remove('active');
+    if (fsEqBtn) fsEqBtn.classList.remove('active');
+  }
+
+  if (eqBtn) eqBtn.addEventListener('click', openEqModal);
+  if (fsEqBtn) fsEqBtn.addEventListener('click', openEqModal);
+  if (eqCloseBtn) eqCloseBtn.addEventListener('click', closeEqModal);
+  if (eqBackdrop) eqBackdrop.addEventListener('click', closeEqModal);
+
+  // Real-time Canvas Visualizer
+  function startVisualizer() {
+    if (!eqCanvas || !analyserNode) return;
+    const ctx = eqCanvas.getContext('2d');
+    const bufferLength = analyserNode.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
+
+    function draw() {
+      requestAnimationFrame(draw);
+      analyserNode.getByteFrequencyData(dataArray);
+
+      const width = eqCanvas.width;
+      const height = eqCanvas.height;
+      ctx.clearRect(0, 0, width, height);
+
+      const barCount = 24;
+      const barWidth = (width / barCount) - 3;
+      let x = 0;
+
+      for (let i = 0; i < barCount; i++) {
+        const dataIdx = Math.floor(i * (bufferLength / barCount));
+        const barHeight = isPlaying ? (dataArray[dataIdx] / 255) * (height - 10) : 4;
+
+        const gradient = ctx.createLinearGradient(0, height, 0, 0);
+        gradient.addColorStop(0, '#1DB954');
+        gradient.addColorStop(1, '#00f2fe');
+
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        if (ctx.roundRect) {
+          ctx.roundRect(x, height - Math.max(barHeight, 4), barWidth, Math.max(barHeight, 4), 3);
+        } else {
+          ctx.rect(x, height - Math.max(barHeight, 4), barWidth, Math.max(barHeight, 4));
+        }
+        ctx.fill();
+
+        x += barWidth + 3;
+      }
+    }
+
+    draw();
+  }
 
   // ——— Keyboard shortcuts ———
   document.addEventListener('keydown', (e) => {

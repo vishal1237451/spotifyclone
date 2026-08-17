@@ -94,6 +94,9 @@
           <button id="search-clear" class="search-clear hidden" aria-label="Clear search">
             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
           </button>
+          <button id="voice-search-btn" class="voice-search-btn" aria-label="Voice Search" title="Search with voice">
+            <svg class="mic-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.49 6-3.31 6-6.72h-1.7z"/></svg>
+          </button>
         </div>
         <div class="search-results" id="search-results"></div>
       </div>
@@ -312,6 +315,9 @@
         </div>
       </div>
       <div class="player-right">
+        <button class="ctrl-btn" id="eq-btn" aria-label="Equalizer" title="Equalizer">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20h4V4h-4v16zm-6 0h4v-8H4v8zM16 9v11h4V9h-4z"/></svg>
+        </button>
         <button class="ctrl-btn" id="volume-btn" aria-label="Toggle mute">
           <svg id="vol-icon-high" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
           <svg id="vol-icon-low" class="hidden" viewBox="0 0 24 24" fill="currentColor"><path d="M18.5 12c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM5 9v6h4l5 5V4L9 9H5z"/></svg>
@@ -410,6 +416,9 @@
             </div>
 
             <div class="fs-right-actions">
+              <button class="fs-ctrl-btn" id="fs-eq-btn" aria-label="Equalizer" title="Equalizer">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20h4V4h-4v16zm-6 0h4v-8H4v8zM16 9v11h4V9h-4z"/></svg>
+              </button>
               <button class="fs-ctrl-btn" id="fs-volume-btn" aria-label="Mute">
                 <svg id="fs-vol-icon-high" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
                 <svg id="fs-vol-icon-low" class="hidden" viewBox="0 0 24 24" fill="currentColor"><path d="M18.5 12c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM5 9v6h4l5 5V4L9 9H5z"/></svg>
@@ -422,6 +431,95 @@
             </div>
           </div>
         </footer>
+      </div>
+    </div>
+  </div>
+
+  <!-- Equalizer Modal -->
+  <div id="eq-modal" class="eq-modal hidden">
+    <div class="eq-backdrop" id="eq-backdrop"></div>
+    <div class="eq-card">
+      <div class="eq-header">
+        <div class="eq-title-group">
+          <svg class="eq-title-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M10 20h4V4h-4v16zm-6 0h4v-8H4v8zM16 9v11h4V9h-4z"/></svg>
+          <h3 class="eq-title">Audio Equalizer</h3>
+        </div>
+        <div class="eq-header-actions">
+          <label class="eq-switch" title="Toggle Equalizer On/Off">
+            <input type="checkbox" id="eq-toggle-switch" checked>
+            <span class="eq-slider-toggle"></span>
+          </label>
+          <button id="eq-close-btn" class="eq-close-btn" aria-label="Close Equalizer">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="eq-body">
+        <!-- Visualizer Canvas -->
+        <div class="eq-visualizer-container">
+          <canvas id="eq-canvas" width="340" height="70"></canvas>
+        </div>
+
+        <!-- Presets Row -->
+        <div class="eq-presets-row">
+          <label for="eq-preset-select" class="eq-label">Preset:</label>
+          <select id="eq-preset-select" class="eq-select">
+            <option value="flat">Flat</option>
+            <option value="bassBoost">Bass Boost</option>
+            <option value="trebleBoost">Treble Boost</option>
+            <option value="pop">Pop</option>
+            <option value="rock">Rock</option>
+            <option value="jazz">Jazz</option>
+            <option value="vocal">Vocal Boost</option>
+            <option value="edm">EDM</option>
+            <option value="custom">Custom</option>
+          </select>
+          <button id="eq-reset-btn" class="eq-reset-btn" title="Reset to Flat">Reset</button>
+        </div>
+
+        <!-- 5-Band Sliders -->
+        <div class="eq-bands">
+          <div class="eq-band">
+            <span class="eq-band-val" id="eq-val-0">0 dB</span>
+            <div class="eq-slider-wrapper">
+              <input type="range" id="eq-band-0" min="-12" max="12" value="0" step="0.5" orient="vertical" />
+            </div>
+            <span class="eq-band-freq">60Hz</span>
+          </div>
+
+          <div class="eq-band">
+            <span class="eq-band-val" id="eq-val-1">0 dB</span>
+            <div class="eq-slider-wrapper">
+              <input type="range" id="eq-band-1" min="-12" max="12" value="0" step="0.5" orient="vertical" />
+            </div>
+            <span class="eq-band-freq">230Hz</span>
+          </div>
+
+          <div class="eq-band">
+            <span class="eq-band-val" id="eq-val-2">0 dB</span>
+            <div class="eq-slider-wrapper">
+              <input type="range" id="eq-band-2" min="-12" max="12" value="0" step="0.5" orient="vertical" />
+            </div>
+            <span class="eq-band-freq">910Hz</span>
+          </div>
+
+          <div class="eq-band">
+            <span class="eq-band-val" id="eq-val-3">0 dB</span>
+            <div class="eq-slider-wrapper">
+              <input type="range" id="eq-band-3" min="-12" max="12" value="0" step="0.5" orient="vertical" />
+            </div>
+            <span class="eq-band-freq">3.6kHz</span>
+          </div>
+
+          <div class="eq-band">
+            <span class="eq-band-val" id="eq-val-4">0 dB</span>
+            <div class="eq-slider-wrapper">
+              <input type="range" id="eq-band-4" min="-12" max="12" value="0" step="0.5" orient="vertical" />
+            </div>
+            <span class="eq-band-freq">14kHz</span>
+          </div>
+        </div>
       </div>
     </div>
   </div>
